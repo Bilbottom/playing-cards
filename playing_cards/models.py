@@ -16,6 +16,7 @@ import itertools
 import pathlib
 import random
 import tomllib
+import typing
 from typing import Any, Literal
 
 Colour = Literal["black", "red"]
@@ -140,6 +141,47 @@ class Rank(enum.IntEnum):
         return self._get("id")
 
 
+@typing.runtime_checkable
+class ICard(typing.Protocol):
+    """
+    Interface for a playing card.
+    """
+
+    rank: Rank
+    suit: Suit
+
+    def __init__(self, rank: Rank, suit: Suit):
+        pass  # pragma: no cover
+
+    @classmethod
+    def from_id(cls, _key: str, /) -> ICard:
+        """
+        Return a card corresponding to the string.
+        """
+        pass  # pragma: no cover
+
+    @property
+    def face(self) -> str:
+        """
+        The face of the card.
+        """
+        pass  # pragma: no cover
+
+    @property
+    def value(self) -> int:
+        """
+        The value of the card.
+        """
+        pass  # pragma: no cover
+
+    @property
+    def colour(self) -> Colour:
+        """
+        The colour of the card.
+        """
+        pass  # pragma: no cover
+
+
 @dataclasses.dataclass
 class Card:
     """
@@ -157,13 +199,13 @@ class Card:
         return self.rank.id + self.suit.id
 
     @classmethod
-    def from_id(cls, _key: str, /) -> Card:
+    def from_id(cls, _id: str, /) -> Card:
         """
         Return a ``Card`` corresponding to the string.
         """
-        if len(_key) != 2:  # noqa: PLR2004
-            raise KeyError(f"The key, {_key}, should be 2 characters")
-        return cls(Rank.from_id(_key[0]), Suit.from_id(_key[1]))
+        if len(_id) != 2:  # noqa: PLR2004
+            raise KeyError(f"The key, {_id}, should be 2 characters")
+        return cls(Rank.from_id(_id[0]), Suit.from_id(_id[1]))
 
     @property
     def face(self) -> str:
@@ -194,12 +236,13 @@ class Deck:
     A set of 52-card French-suited playing cards.
     """
 
-    cards: list[Card]
+    cards: list[ICard]
 
-    def __init__(self):
+    def __init__(self, card_type: type[ICard] = Card):
         """
         Return a ``Deck`` with 52 cards.
         """
+        self._card_type = card_type
         self.cards = []
         self.reset()
 
@@ -219,7 +262,8 @@ class Deck:
         rank: Rank  # noqa: F842
         suit: Suit  # noqa: F842
         self.cards = [
-            Card(rank, suit) for rank, suit in itertools.product(Rank, Suit)
+            self._card_type(rank, suit)
+            for rank, suit in itertools.product(Rank, Suit)
         ]
 
         self.shuffle()
@@ -230,7 +274,7 @@ class Deck:
         """
         random.shuffle(self.cards)
 
-    def take_card(self, _id: str | None = None, /) -> Card:
+    def take_card(self, _id: str | None = None, /) -> ICard:
         """
         Return the top card from the deck.
 
@@ -242,7 +286,7 @@ class Deck:
         """
         return self._take_card_by_id(_id) if _id else self.cards.pop()
 
-    def _take_card_by_id(self, _id: str) -> Card:
+    def _take_card_by_id(self, _id: str) -> ICard:
         """
         Pop the card ``id_`` from the deck.
 
@@ -264,12 +308,12 @@ class Decks(Deck):
     A set of multiple decks of cards.
     """
 
-    def __init__(self, n: int):
+    def __init__(self, n: int, card_type: type[ICard] = Card):
         """
         Return a set of ``n`` decks of cards.
         """
         self.number_of_decks = n
-        super().__init__()
+        super().__init__(card_type)  # type: ignore
 
     def reset(self) -> None:
         """
@@ -280,7 +324,8 @@ class Decks(Deck):
         self.cards = []
         for _ in range(self.number_of_decks):
             self.cards.extend(
-                Card(rank, suit) for rank, suit in itertools.product(Rank, Suit)
+                self._card_type(rank, suit)
+                for rank, suit in itertools.product(Rank, Suit)
             )
 
         self.shuffle()

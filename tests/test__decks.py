@@ -4,7 +4,7 @@ Test the ``playing_cards.Decks`` class.
 
 import pytest
 
-from playing_cards import Card, Decks, Rank, Suit
+from playing_cards import Card, Colour, Decks, Rank, Suit
 
 
 def test__decks__can_be_initialised():
@@ -15,6 +15,66 @@ def test__decks__can_be_initialised():
     assert len(deck_1) == 52
     assert len(deck_2) == 104
     assert len(deck_3) == 156
+
+
+def test__decks__can_be_initialised_with_default_card_type():
+    """
+    Test that decks can be initialised.
+    """
+    deck = Decks(2, card_type=Card)
+    assert len(deck) == 104
+    assert type(deck[0]) is Card
+
+
+def test__decks__can_be_initialised_with_custom_card_type():
+    """
+    Test that decks can be initialised.
+    """
+
+    class CustomCard:
+        rank: Rank
+        suit: Suit
+
+        def __init__(self, rank: Rank, suit: Suit):
+            self.rank = rank
+            self.suit = suit
+
+        @classmethod
+        def from_id(cls, _key: str, /):
+            """
+            Return a card corresponding to the string.
+            """
+            return cls(Rank("A"), Suit("S"))  # pragma: no cover
+
+        @property
+        def face(self) -> str:
+            """
+            The face of the card.
+            """
+            return "AS"
+
+        @property
+        def value(self) -> int:
+            """
+            The value of the card.
+            """
+            return 1
+
+        @property
+        def colour(self) -> Colour:
+            """
+            The colour of the card.
+            """
+            return "red"
+
+    deck = Decks(2, card_type=CustomCard)
+    assert len(deck) == 104
+
+    card = deck.take_card()
+    assert type(card) is CustomCard
+    assert card.face == "AS"
+    assert card.value == 1
+    assert card.colour == "red"
 
 
 def test__decks__taking_a_card_makes_the_deck_smaller():

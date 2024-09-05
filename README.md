@@ -54,7 +54,7 @@ def print_cards(cards: list[playing_cards.Card]) -> None:
 def red_or_black() -> None:
     """Play a game of Red or Black."""
     deck = playing_cards.Deck()
-    cards = []
+    cards: list[playing_cards.Card] = []
 
     ###  red or black
     colour_choice = ask(["red", "black"])
@@ -101,7 +101,32 @@ if __name__ == "__main__":
     red_or_black()
 ```
 
-## Contributing
+## Modifying the Deck 🃏
+
+The `Deck` and `Decks` classes can use custom `Card` classes via their `card_type` parameter. This can be handy for customising cards for specific games.
+
+```python
+import playing_cards
+
+
+class CardWithAceHigh(playing_cards.Card):
+    """A card with the Ace ranked higher than the King."""
+
+    @property
+    def value(self) -> int:
+        """Return the value of the card."""
+        return self.rank.value if self.rank.value != 1 else 14
+
+
+def main():
+    """Create a deck of cards with the Ace ranked higher than the King."""
+    deck = playing_cards.Deck(card_type=CardWithAceHigh)
+    ace = deck.take_card("AS")
+    king = deck.take_card("KH")
+    print(ace.value > king.value)  # True
+```
+
+## Contributing 🤝
 
 Install poetry and pre-commit:
 

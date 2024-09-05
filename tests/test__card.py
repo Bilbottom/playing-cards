@@ -69,7 +69,7 @@ def test__card__value_is_the_rank_value():
         assert card.value == rank.value
 
 
-def test__colour_is_the_suit_colour():
+def test__card__colour_is_the_suit_colour():
     """
     Test that a card's colour is the suit colour.
     """
